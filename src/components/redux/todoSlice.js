@@ -24,26 +24,25 @@ const todoSlice = createSlice({
       saveTaskToLocalStorage(state);
       return state;
     },
-    Edit: (state, action) => {
+    editTask: (state, action) => {
       const index = state.findIndex((task) => task.id === action.payload.id);
+      if (index !== -1) {
+        state[index] = { ...state[index], ...action.payload };
+        saveTaskToLocalStorage(state);
+      }
     },
     setTodos: (state, action) => {
       return action.payload;
     },
-    setDraggedTaskIndex: (state, action) => {
-      state.draggedTaskIndex = action.payload;
-    },
-    clearDraggedTaskIndex: (state) => {
-      state.draggedTaskIndex = null;
+    moveTask: (state, { payload }) => {
+      const { fromIndex, toIndex } = payload;
+      const [movedTask] = state.splice(fromIndex, 1);
+      state.splice(toIndex, 0, movedTask);
+      saveTaskToLocalStorage(state);
     },
   },
 });
 
-export const {
-  addTodo,
-  removeTodo,
-  setTodos,
-  setDraggedTaskIndex,
-  clearDraggedTaskIndex,
-} = todoSlice.actions;
+export const { addTodo, removeTodo, setTodos, moveTask, editTask } =
+  todoSlice.actions;
 export default todoSlice.reducer;

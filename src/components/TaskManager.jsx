@@ -11,16 +11,10 @@ import Edit from "./ui/Edit";
 import ShareMenu from "./ui/ShareMenu";
 import ConfirmDelete from "./ui/ConfirmDelete";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  addTodo,
-  removeTodo,
-  setDraggedTaskIndex,
-  clearDraggedTaskIndex,
-} from "./redux/todoSlice";
-//import { setDraggedTaskIndex, clearDraggedTaskIndex } from "./redux/dragSlice";
+import { addTodo, removeTodo, moveTask, editTask } from "./redux/todoSlice";
 
 const TaskManager = () => {
-  const draggedTaskIndex = useSelector((state) => state.drag.draggedTaskIndex);
+  const [draggedTaskIndex, setDraggedTaskIndex] = useState(null);
   const [showNoTasksMessage, setShowNoTasksMessage] = useState(true);
   const [isInfoVisible, setInfoVisible] = useState(false);
   const [isEditVisible, setEditVisible] = useState(false);
@@ -49,29 +43,8 @@ const TaskManager = () => {
     setConfirmDeleteVisible(false);
   };
 
-  // const handleDragStart = (index) => {
-  //   setDraggedTaskIndex(index);
-  // };
-
-  // const handleDragOver = (index) => {
-  //   if (draggedTaskIndex === null || draggedTaskIndex === index) return;
-
-  //   const updatedTasks = [...tasks];
-  //   const draggedTask = updatedTasks[draggedTaskIndex];
-  //   updatedTasks.splice(draggedTaskIndex, 1);
-  //   updatedTasks.splice(index, 0, draggedTask);
-
-  //   //setTasks(updatedTasks);
-  //   setDraggedTaskIndex(index);
-  //   saveTaskToLocalStorage(updatedTasks);
-  // };
-
-  // const handleDragEnd = () => {
-  //   setDraggedTaskIndex(null);
-  // };
-
   const handleDragStart = (index) => {
-    dispatch(setDraggedTaskIndex(index)); // Установите индекс перетаскиваемой задачи
+    setDraggedTaskIndex(index);
   };
 
   const handleDragOver = (index) => {
@@ -82,13 +55,12 @@ const TaskManager = () => {
     updatedTasks.splice(draggedTaskIndex, 1);
     updatedTasks.splice(index, 0, draggedTask);
 
-    // Обновите состояние задач в Redux
-    // dispatch(setTodos(updatedTasks)); // Если у вас есть действие для установки задач
-    // Или просто обновите локальное состояние, если это необходимо
+    setDraggedTaskIndex(index);
+    dispatch(moveTask({ fromIndex: draggedTaskIndex, toIndex: index }));
   };
 
   const handleDragEnd = () => {
-    dispatch(clearDraggedTaskIndex()); // Очистите индекс после завершения перетаскивания
+    setDraggedTaskIndex(null);
   };
 
   const closeModal = () => {
@@ -105,7 +77,7 @@ const TaskManager = () => {
   };
 
   const openEdit = (task) => {
-    dispatch(Edit(task));
+    dispatch(editTask(task));
     setSelectedTask(task);
     setEditVisible(true);
   };
@@ -120,15 +92,10 @@ const TaskManager = () => {
     setConfirmDeleteVisible(true);
   };
 
-  const saveEditTask = ({ title, text }) => {
-    if (selectedTask) {
-      const updatedTasks = tasks.map((task) =>
-        task === selectedTask ? { ...task, title, text } : task
-      );
-      setTasks(updatedTasks);
-      saveTaskToLocalStorage(updatedTasks);
-      setSelectedTask(null);
-    }
+  const saveEditTask = (updatedTask) => {
+    dispatch(editTask({ id: selectedTask.id, ...updatedTask }));
+    setSelectedTask(null);
+    closeModal();
   };
 
   return (
